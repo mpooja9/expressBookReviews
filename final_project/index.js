@@ -10,8 +10,21 @@ app.use(express.json());
 
 app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
 
-app.use("/customer/auth/*", function auth(req,res,next){
-//Write the authenication mechanism here
+app.use("/customer/auth/*", function auth(req, res, next) {
+  const token = req.session.token; // assuming the token is stored in session
+
+  if (!token) {
+    return res.status(401).json({ message: "Access token is missing" });
+  }
+
+  jwt.verify(token, "access", (err, user) => { // replace 'your_secret_key' with your actual secret key
+    if (err) {
+      return res.status(403).json({ message: "Invalid access token" });
+    }
+
+    req.user = user; // add the user info to the request object
+    next();
+  });
 });
  
 const PORT =5000;
